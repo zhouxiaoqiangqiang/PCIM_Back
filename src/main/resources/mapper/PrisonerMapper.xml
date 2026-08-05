@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pcim.mapper.PrisonerMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.pcim.entity.Prisoner">
+        <id column="id" property="id" />
+        <result column="prisoner_no" property="prisonerNo" />
+        <result column="name" property="name" />
+        <result column="gender" property="gender" />
+        <result column="age" property="age" />
+        <result column="id_card" property="idCard" />
+        <result column="cell" property="cell" />
+        <result column="crime_type" property="crimeType" />
+        <result column="sentence" property="sentence" />
+        <result column="entry_date" property="entryDate" />
+        <result column="birth_date" property="birthDate" />
+        <result column="hometown" property="hometown" />
+        <result column="social_background" property="socialBackground" />
+        <result column="occupation" property="occupation" />
+        <result column="photo" property="photo" />
+        <result column="status" property="status" />
+        <result column="remark" property="remark" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM prison_prisoner WHERE id = #{id}
+    </select>
+
+    <select id="selectByNo" resultMap="BaseResultMap">
+        SELECT * FROM prison_prisoner WHERE prisoner_no = #{prisonerNo}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM prison_prisoner
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR prisoner_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="cell != null and cell != ''">
+                AND cell = #{cell}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM prison_prisoner
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR prisoner_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="cell != null and cell != ''">
+                AND cell = #{cell}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="com.example.pcim.entity.Prisoner">
+        INSERT INTO prison_prisoner (prisoner_no, name, gender, age, id_card, cell, crime_type, sentence, entry_date, birth_date, hometown, social_background, occupation, photo, status, remark, create_time, update_time)
+        VALUES (#{prisonerNo}, #{name}, #{gender}, #{age}, #{idCard}, #{cell}, #{crimeType}, #{sentence}, #{entryDate}, #{birthDate}, #{hometown}, #{socialBackground}, #{occupation}, #{photo}, #{status}, #{remark}, NOW(), NOW())
+    </insert>
+
+    <update id="update" parameterType="com.example.pcim.entity.Prisoner">
+        UPDATE prison_prisoner SET
+        <if test="name != null">name = #{name},</if>
+        <if test="gender != null">gender = #{gender},</if>
+        <if test="age != null">age = #{age},</if>
+        <if test="idCard != null">id_card = #{idCard},</if>
+        <if test="cell != null">cell = #{cell},</if>
+        <if test="crimeType != null">crime_type = #{crimeType},</if>
+        <if test="sentence != null">sentence = #{sentence},</if>
+        <if test="entryDate != null">entry_date = #{entryDate},</if>
+        <if test="birthDate != null">birth_date = #{birthDate},</if>
+        <if test="hometown != null">hometown = #{hometown},</if>
+        <if test="socialBackground != null">social_background = #{socialBackground},</if>
+        <if test="occupation != null">occupation = #{occupation},</if>
+        <if test="photo != null">photo = #{photo},</if>
+        <if test="status != null">status = #{status},</if>
+        <if test="remark != null">remark = #{remark},</if>
+        update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM prison_prisoner WHERE id = #{id}
+    </delete>
+
+</mapper>

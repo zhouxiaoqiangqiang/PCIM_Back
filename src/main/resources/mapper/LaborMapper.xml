@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pcim.mapper.LaborMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.pcim.entity.Labor">
+        <id column="id" property="id" />
+        <result column="prisoner_id" property="prisonerId" />
+        <result column="prisoner_no" property="prisonerNo" />
+        <result column="name" property="name" />
+        <result column="cell" property="cell" />
+        <result column="work_type" property="workType" />
+        <result column="work_place" property="workPlace" />
+        <result column="work_hours" property="workHours" />
+        <result column="work_score" property="workScore" />
+        <result column="status" property="status" />
+        <result column="assign_date" property="assignDate" />
+        <result column="remark" property="remark" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM prison_labor WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM prison_labor
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR prisoner_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="workType != null and workType != ''">
+                AND work_type = #{workType}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM prison_labor
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR prisoner_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="workType != null and workType != ''">
+                AND work_type = #{workType}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="com.example.pcim.entity.Labor">
+        INSERT INTO prison_labor (prisoner_id, prisoner_no, name, cell, work_type, work_place, work_hours, work_score, status, assign_date, remark, create_time, update_time)
+        VALUES (#{prisonerId}, #{prisonerNo}, #{name}, #{cell}, #{workType}, #{workPlace}, #{workHours}, #{workScore}, #{status}, #{assignDate}, #{remark}, NOW(), NOW())
+    </insert>
+
+    <update id="update" parameterType="com.example.pcim.entity.Labor">
+        UPDATE prison_labor SET
+        <if test="workType != null">work_type = #{workType},</if>
+        <if test="workPlace != null">work_place = #{workPlace},</if>
+        <if test="workHours != null">work_hours = #{workHours},</if>
+        <if test="workScore != null">work_score = #{workScore},</if>
+        <if test="status != null">status = #{status},</if>
+        <if test="assignDate != null">assign_date = #{assignDate},</if>
+        <if test="remark != null">remark = #{remark},</if>
+        update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM prison_labor WHERE id = #{id}
+    </delete>
+
+</mapper>

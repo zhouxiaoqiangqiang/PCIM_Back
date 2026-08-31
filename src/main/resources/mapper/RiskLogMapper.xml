@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 风险变更日志 Mapper XML -->
+<mapper namespace="com.example.pcim.mapper.RiskLogMapper">
+
+    <!-- 风险变更日志结果映射 -->
+    <resultMap id="BaseResultMap" type="com.example.pcim.entity.RiskLog">
+        <id column="id" property="id" />
+        <result column="prisoner_no" property="prisonerNo" />
+        <result column="name" property="name" />
+        <result column="old_level" property="oldLevel" />
+        <result column="new_level" property="newLevel" />
+        <result column="operator" property="operator" />
+        <result column="remark" property="remark" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <!-- 根据ID查询风险变更日志 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM prison_risk_log WHERE id = #{id}
+    </select>
+
+    <!-- 根据条件查询风险变更日志列表 -->
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM prison_risk_log
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR prisoner_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="oldLevel != null and oldLevel != ''">
+                AND old_level = #{oldLevel}
+            </if>
+            <if test="newLevel != null and newLevel != ''">
+                AND new_level = #{newLevel}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据条件统计风险变更日志总数 -->
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM prison_risk_log
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR prisoner_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="oldLevel != null and oldLevel != ''">
+                AND old_level = #{oldLevel}
+            </if>
+            <if test="newLevel != null and newLevel != ''">
+                AND new_level = #{newLevel}
+            </if>
+        </where>
+    </select>
+
+    <!-- 新增风险变更日志 -->
+    <insert id="insert" parameterType="com.example.pcim.entity.RiskLog">
+        INSERT INTO prison_risk_log (prisoner_no, name, old_level, new_level, operator, remark, create_time)
+        VALUES (#{prisonerNo}, #{name}, #{oldLevel}, #{newLevel}, #{operator}, #{remark}, NOW())
+    </insert>
+
+    <!-- 更新风险变更日志 -->
+    <update id="update" parameterType="com.example.pcim.entity.RiskLog">
+        UPDATE prison_risk_log SET
+        <if test="prisonerNo != null">prisoner_no = #{prisonerNo},</if>
+        <if test="name != null">name = #{name},</if>
+        <if test="oldLevel != null">old_level = #{oldLevel},</if>
+        <if test="newLevel != null">new_level = #{newLevel},</if>
+        <if test="operator != null">operator = #{operator},</if>
+        <if test="remark != null">remark = #{remark},</if>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除风险变更日志 -->
+    <delete id="deleteById">
+        DELETE FROM prison_risk_log WHERE id = #{id}
+    </delete>
+
+</mapper>

@@ -7,6 +7,8 @@ import com.example.pcim.service.PrisonerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/prisoners")
 public class PrisonerController {
@@ -40,5 +42,15 @@ public class PrisonerController {
     public Response<?> deletePrisoner(@PathVariable Long id) {
         prisonerService.deletePrisoner(id);
         return Response.success("删除成功");
+    }
+
+    /**
+     * 修改监犯风险等级
+     * 前端传入 riskLevel 和 reason，后端更新并自动写入变更日志
+     */
+    @PostMapping("/{id}/risk-level")
+    public Response<?> updateRiskLevel(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        prisonerService.updateRiskLevel(id, body.get("riskLevel"), body.get("reason"));
+        return Response.success("风险等级变更成功");
     }
 }

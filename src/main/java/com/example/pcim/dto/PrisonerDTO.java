@@ -22,5 +22,7 @@ public class PrisonerDTO {
     private String occupation;
     private String photo;
     private String status;
+    /** 风险等级（高风险/中风险/低风险/未评定） */
+    private String riskLevel;
     private String remark;
 }

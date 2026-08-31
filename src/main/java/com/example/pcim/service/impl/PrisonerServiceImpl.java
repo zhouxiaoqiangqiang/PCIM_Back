@@ -4,8 +4,10 @@ import com.example.pcim.dto.PageResult;
 import com.example.pcim.dto.PrisonerDTO;
 import com.example.pcim.dto.PrisonerQueryDTO;
 import com.example.pcim.entity.Prisoner;
+import com.example.pcim.entity.RiskLog;
 import com.example.pcim.exception.BusinessException;
 import com.example.pcim.mapper.PrisonerMapper;
+import com.example.pcim.mapper.RiskLogMapper;
 import com.example.pcim.service.PrisonerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,10 @@ public class PrisonerServiceImpl implements PrisonerService {
 
     @Autowired
     private PrisonerMapper prisonerMapper;
+
+    /** 风险变更日志 Mapper，修改风险等级时自动写入日志 */
+    @Autowired
+    private RiskLogMapper riskLogMapper;
 
     @Override
     public PageResult<Prisoner> getPrisonerList(PrisonerQueryDTO queryDTO) {
@@ -104,5 +110,40 @@ public class PrisonerServiceImpl implements PrisonerService {
             throw new BusinessException("监犯不存在");
         }
         return prisonerMapper.deleteById(id);
+    }
+
+
+    /**
+     * 修改监犯风险等级
+     * 1. 校验监犯是否存在
+     * 2. 若新旧等级相同则提示无需变更
+     * 3. 更新 risk_level 字段
+     * 4. 自动写入风险变更日志（prison_risk_log）
+     */
+    @Override
+    public void updateRiskLevel(Long id, String riskLevel, String reason) {
+        Prisoner prisoner = prisonerMapper.selectById(id);
+        if (prisoner == null) {
+            throw new BusinessException("监犯不存在");
+        }
+
+        String oldLevel = prisoner.getRiskLevel();
+        if (riskLevel.equals(oldLevel)) {
+            throw new BusinessException("当前已是「" + riskLevel + "」，请选择不同的等级");
+        }
+
+        // 更新风险等级
+        prisonerMapper.updateRiskLevel(id, riskLevel);
+
+        // 写入风险变更日志
+        RiskLog log = new RiskLog();
+        log.setPrisonerNo(prisoner.getPrisonerNo());
+        log.setName(prisoner.getName());
+        log.setOldLevel(oldLevel != null ? oldLevel : "未评定");
+        log.setNewLevel(riskLevel);
+        log.setOperator("系统"); // 实际可从 SecurityContext 获取当前登录用户
+        log.setRemark(reason != null ? reason : "手动调整风险等级");
+
+        riskLogMapper.insert(log);
     }
 }

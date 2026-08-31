@@ -19,6 +19,7 @@
         <result column="occupation" property="occupation" />
         <result column="photo" property="photo" />
         <result column="status" property="status" />
+        <result column="risk_level" property="riskLevel" />
         <result column="remark" property="remark" />
         <result column="create_time" property="createTime" />
         <result column="update_time" property="updateTime" />
@@ -84,9 +85,15 @@
         <if test="occupation != null">occupation = #{occupation},</if>
         <if test="photo != null">photo = #{photo},</if>
         <if test="status != null">status = #{status},</if>
+        <if test="riskLevel != null">risk_level = #{riskLevel},</if>
         <if test="remark != null">remark = #{remark},</if>
         update_time = NOW()
         WHERE id = #{id}
+    </update>
+
+    <!-- 更新监犯风险等级 -->
+    <update id="updateRiskLevel">
+        UPDATE prison_prisoner SET risk_level = #{riskLevel}, update_time = NOW() WHERE id = #{id}
     </update>
 
     <delete id="deleteById">

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 风险评估 Mapper XML -->
+<mapper namespace="com.example.pcim.mapper.RiskMapper">
+
+    <!-- 风险评估结果映射 -->
+    <resultMap id="BaseResultMap" type="com.example.pcim.entity.Risk">
+        <id column="id" property="id" />
+        <result column="prisoner_no" property="prisonerNo" />
+        <result column="name" property="name" />
+        <result column="cell" property="cell" />
+        <result column="crime_type" property="crimeType" />
+        <result column="assess_date" property="assessDate" />
+        <result column="violence" property="violence" />
+        <result column="escape" property="escape" />
+        <result column="suicide" property="suicide" />
+        <result column="health" property="health" />
+        <result column="total_score" property="totalScore" />
+        <result column="risk_level" property="riskLevel" />
+        <result column="assessor" property="assessor" />
+        <result column="remark" property="remark" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 根据ID查询风险评估 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM prison_risk WHERE id = #{id}
+    </select>
+
+    <!-- 根据条件查询风险评估列表 -->
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM prison_risk
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR prisoner_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="cell != null and cell != ''">
+                AND cell = #{cell}
+            </if>
+            <if test="riskLevel != null and riskLevel != ''">
+                AND risk_level = #{riskLevel}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据条件统计风险评估总数 -->
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM prison_risk
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR prisoner_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="cell != null and cell != ''">
+                AND cell = #{cell}
+            </if>
+            <if test="riskLevel != null and riskLevel != ''">
+                AND risk_level = #{riskLevel}
+            </if>
+        </where>
+    </select>
+
+    <!-- 新增风险评估记录 -->
+    <insert id="insert" parameterType="com.example.pcim.entity.Risk">
+        INSERT INTO prison_risk (prisoner_no, name, cell, crime_type, assess_date, violence, escape, suicide, health, total_score, risk_level, assessor, remark, create_time, update_time)
+        VALUES (#{prisonerNo}, #{name}, #{cell}, #{crimeType}, #{assessDate}, #{violence}, #{escape}, #{suicide}, #{health}, #{totalScore}, #{riskLevel}, #{assessor}, #{remark}, NOW(), NOW())
+    </insert>
+
+    <!-- 更新风险评估记录 -->
+    <update id="update" parameterType="com.example.pcim.entity.Risk">
+        UPDATE prison_risk SET
+        <if test="prisonerNo != null">prisoner_no = #{prisonerNo},</if>
+        <if test="name != null">name = #{name},</if>
+        <if test="cell != null">cell = #{cell},</if>
+        <if test="crimeType != null">crime_type = #{crimeType},</if>
+        <if test="assessDate != null">assess_date = #{assessDate},</if>
+        <if test="violence != null">violence = #{violence},</if>
+        <if test="escape != null">escape = #{escape},</if>
+        <if test="suicide != null">suicide = #{suicide},</if>
+        <if test="health != null">health = #{health},</if>
+        <if test="totalScore != null">total_score = #{totalScore},</if>
+        <if test="riskLevel != null">risk_level = #{riskLevel},</if>
+        <if test="assessor != null">assessor = #{assessor},</if>
+        <if test="remark != null">remark = #{remark},</if>
+        update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除风险评估记录 -->
+    <delete id="deleteById">
+        DELETE FROM prison_risk WHERE id = #{id}
+    </delete>
+
+</mapper>

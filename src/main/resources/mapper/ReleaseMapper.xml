@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pcim.mapper.ReleaseMapper">
+
+    <!-- 基础结果映射：数据库下划线字段 -> Java驼峰属性 -->
+    <resultMap id="BaseResultMap" type="com.example.pcim.entity.Release">
+        <id column="id" property="id"/>
+        <result column="apply_no" property="applyNo"/>
+        <result column="prisoner_no" property="prisonerNo"/>
+        <result column="name" property="name"/>
+        <result column="cell" property="cell"/>
+        <result column="type" property="type"/>
+        <result column="reason" property="reason"/>
+        <result column="status" property="status"/>
+        <result column="approver" property="approver"/>
+        <result column="approve_time" property="approveTime"/>
+        <result column="reject_reason" property="rejectReason"/>
+        <result column="version" property="version"/>
+        <result column="apply_time" property="applyTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 根据ID查询离监申请详情 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM prison_release WHERE id = #{id}
+    </select>
+
+    <!--
+        条件查询离监申请列表
+        - keyword 模糊匹配：apply_no / prisoner_no / name
+        - 支持 status 和 type 过滤
+        - 按 apply_time 倒序排列
+    -->
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM prison_release
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (apply_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR prisoner_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+        </where>
+        ORDER BY apply_time DESC
+    </select>
+
+    <!-- 条件查询离监申请总数（与 selectList 条件一致） -->
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM prison_release
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (apply_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR prisoner_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+        </where>
+    </select>
+
+    <!-- 查询待审批列表（仅返回 PENDING 状态，按申请时间倒序） -->
+    <select id="selectTodoList" resultMap="BaseResultMap">
+        SELECT * FROM prison_release WHERE status = 'PENDING' ORDER BY apply_time DESC
+    </select>
+
+    <!-- 查询待审批数量 -->
+    <select id="selectTodoCount" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM prison_release WHERE status = 'PENDING'
+    </select>
+
+    <!--
+        新增离监申请
+        - apply_no 由 Service 层自动生成
+        - status 默认为 PENDING
+        - version 默认为 0
+        - apply_time 为申请时间
+        - create_time / update_time 由数据库自动填充
+    -->
+    <insert id="insert" parameterType="com.example.pcim.entity.Release" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO prison_release
+        (apply_no, prisoner_no, name, cell, type, reason, status,
+         approver, approve_time, reject_reason, version, apply_time,
+         create_time, update_time)
+        VALUES
+        (#{applyNo}, #{prisonerNo}, #{name}, #{cell}, #{type}, #{reason}, #{status},
+         #{approver}, #{approveTime}, #{rejectReason}, #{version}, #{applyTime},
+         NOW(), NOW())
+    </insert>
+
+    <!--
+        更新离监申请
+        - version 字段在 Service 层手动 +1 后传入
+        - update_time 由数据库自动更新
+    -->
+    <update id="update" parameterType="com.example.pcim.entity.Release">
+        UPDATE prison_release
+        <set>
+            <if test="applyNo != null">apply_no = #{applyNo},</if>
+            <if test="prisonerNo != null">prisoner_no = #{prisonerNo},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="cell != null">cell = #{cell},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="reason != null">reason = #{reason},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="approver != null">approver = #{approver},</if>
+            <if test="approveTime != null">approve_time = #{approveTime},</if>
+            <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
+            <if test="version != null">version = #{version},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除离监申请 -->
+    <delete id="deleteById">
+        DELETE FROM prison_release WHERE id = #{id}
+    </delete>
+
+</mapper>

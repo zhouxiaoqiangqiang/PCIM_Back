@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  谈话记录 Mapper XML
+  对应表：prison_talk
+-->
+<mapper namespace="com.example.pcim.mapper.TalkMapper">
+
+    <!-- 结果映射：数据库字段名（下划线） 与 Java 属性名（驼峰）之间的映射 -->
+    <resultMap id="BaseResultMap" type="com.example.pcim.entity.Talk">
+        <id column="id" property="id" />
+        <result column="prisoner_no" property="prisonerNo" />
+        <result column="name" property="name" />
+        <result column="cell" property="cell" />
+        <result column="talk_date" property="talkDate" />
+        <result column="type" property="type" />
+        <result column="location" property="location" />
+        <result column="content" property="content" />
+        <result column="talker" property="talker" />
+        <result column="follow_up" property="followUp" />
+        <result column="remark" property="remark" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 根据主键查询单条记录 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM prison_talk WHERE id = #{id}
+    </select>
+
+    <!-- 查询谈话记录列表，支持 keyword/type 动态筛选，按 talk_date 倒序 -->
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM prison_talk
+        <where>
+            <!-- 关键字：模糊匹配监犯编号、姓名、谈话内容 -->
+            <if test="keyword != null and keyword != ''">
+                AND (prisoner_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR name LIKE CONCAT('%', #{keyword}, '%')
+                     OR content LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <!-- 谈话类型筛选 -->
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+        </where>
+        ORDER BY talk_date DESC
+    </select>
+
+    <!-- 查询总记录数，条件与 selectList 保持一致 -->
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM prison_talk
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (prisoner_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR name LIKE CONCAT('%', #{keyword}, '%')
+                     OR content LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+        </where>
+    </select>
+
+    <!-- 新增谈话记录 -->
+    <insert id="insert" parameterType="com.example.pcim.entity.Talk">
+        INSERT INTO prison_talk
+        (prisoner_no, name, cell, talk_date, type, location, content, talker, follow_up, remark, create_time, update_time)
+        VALUES
+        (#{prisonerNo}, #{name}, #{cell}, #{talkDate}, #{type}, #{location}, #{content}, #{talker}, #{followUp}, #{remark}, NOW(), NOW())
+    </insert>
+
+    <!-- 更新谈话记录，所有字段按需动态更新 -->
+    <update id="update" parameterType="com.example.pcim.entity.Talk">
+        UPDATE prison_talk SET
+        <if test="prisonerNo != null">prisoner_no = #{prisonerNo},</if>
+        <if test="name != null">name = #{name},</if>
+        <if test="cell != null">cell = #{cell},</if>
+        <if test="talkDate != null">talk_date = #{talkDate},</if>
+        <if test="type != null">type = #{type},</if>
+        <if test="location != null">location = #{location},</if>
+        <if test="content != null">content = #{content},</if>
+        <if test="talker != null">talker = #{talker},</if>
+        <if test="followUp != null">follow_up = #{followUp},</if>
+        <if test="remark != null">remark = #{remark},</if>
+        update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据主键删除 -->
+    <delete id="deleteById">
+        DELETE FROM prison_talk WHERE id = #{id}
+    </delete>
+
+</mapper>

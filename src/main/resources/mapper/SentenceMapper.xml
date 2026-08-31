@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pcim.mapper.SentenceMapper">
+
+    <!-- 刑期档案结果映射 -->
+    <resultMap id="BaseResultMap" type="com.example.pcim.entity.Sentence">
+        <id column="id" property="id" />
+        <result column="prisoner_no" property="prisonerNo" />
+        <result column="name" property="name" />
+        <result column="cell" property="cell" />
+        <result column="crime_type" property="crimeType" />
+        <result column="entry_date" property="entryDate" />
+        <result column="original_sentence" property="originalSentence" />
+        <result column="sentence_start" property="sentenceStart" />
+        <result column="reduced_months" property="reducedMonths" />
+        <result column="release_date" property="releaseDate" />
+        <result column="parole" property="parole" />
+        <result column="status" property="status" />
+        <result column="remark" property="remark" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM prison_sentence WHERE id = #{id}
+    </select>
+
+    <!-- 根据入监编号查询 -->
+    <select id="selectByNo" resultMap="BaseResultMap">
+        SELECT * FROM prison_sentence WHERE prisoner_no = #{prisonerNo}
+    </select>
+
+    <!-- 条件查询列表 -->
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM prison_sentence
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR prisoner_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="cell != null and cell != ''">
+                AND cell = #{cell}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <!-- nearRelease='1' 时，只返回90天内即将释放的记录 -->
+            <if test="nearRelease != null and nearRelease == '1'.toString()">
+                AND release_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 90 DAY)
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 条件查询总数 -->
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM prison_sentence
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR prisoner_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="cell != null and cell != ''">
+                AND cell = #{cell}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <!-- nearRelease='1' 时，只返回90天内即将释放的记录 -->
+            <if test="nearRelease != null and nearRelease == '1'.toString()">
+                AND release_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 90 DAY)
+            </if>
+        </where>
+    </select>
+
+    <!-- 新增刑期档案 -->
+    <insert id="insert" parameterType="com.example.pcim.entity.Sentence">
+        INSERT INTO prison_sentence (prisoner_no, name, cell, crime_type, entry_date, original_sentence, sentence_start, reduced_months, release_date, parole, status, remark, create_time, update_time)
+        VALUES (#{prisonerNo}, #{name}, #{cell}, #{crimeType}, #{entryDate}, #{originalSentence}, #{sentenceStart}, #{reducedMonths}, #{releaseDate}, #{parole}, #{status}, #{remark}, NOW(), NOW())
+    </insert>
+
+    <!-- 更新刑期档案 -->
+    <update id="update" parameterType="com.example.pcim.entity.Sentence">
+        UPDATE prison_sentence SET
+        <if test="prisonerNo != null">prisoner_no = #{prisonerNo},</if>
+        <if test="name != null">name = #{name},</if>
+        <if test="cell != null">cell = #{cell},</if>
+        <if test="crimeType != null">crime_type = #{crimeType},</if>
+        <if test="entryDate != null">entry_date = #{entryDate},</if>
+        <if test="originalSentence != null">original_sentence = #{originalSentence},</if>
+        <if test="sentenceStart != null">sentence_start = #{sentenceStart},</if>
+        <if test="reducedMonths != null">reduced_months = #{reducedMonths},</if>
+        <if test="releaseDate != null">release_date = #{releaseDate},</if>
+        <if test="parole != null">parole = #{parole},</if>
+        <if test="status != null">status = #{status},</if>
+        <if test="remark != null">remark = #{remark},</if>
+        update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除 -->
+    <delete id="deleteById">
+        DELETE FROM prison_sentence WHERE id = #{id}
+    </delete>
+
+    <!-- 查询指定年份的入监编号最大流水号 -->
+    <!-- 入监编号格式：RJ + 年份(4位) + 流水号(4位)，如 RJ20260001 -->
+    <select id="selectMaxNoByYear" resultType="java.lang.Integer">
+        SELECT MAX(CAST(SUBSTRING(prisoner_no, 7, 4) AS UNSIGNED))
+        FROM prison_sentence
+        WHERE prisoner_no LIKE CONCAT('RJ', #{year}, '%')
+    </select>
+
+</mapper>

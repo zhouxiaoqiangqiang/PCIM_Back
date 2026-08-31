@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pcim.mapper.RoleMapper">
+
+    <!-- 结果映射：数据库列名 -> Java 属性 -->
+    <resultMap id="BaseResultMap" type="com.example.pcim.entity.Role">
+        <id column="id" property="id" />
+        <result column="role_name" property="roleName" />
+        <result column="role_key" property="roleKey" />
+        <result column="description" property="description" />
+        <result column="user_count" property="userCount" />
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 根据ID查询角色 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM sys_role WHERE id = #{id}
+    </select>
+
+    <!-- 根据角色标识查询角色（用于唯一性校验） -->
+    <select id="selectByKey" resultMap="BaseResultMap">
+        SELECT * FROM sys_role WHERE role_key = #{roleKey}
+    </select>
+
+    <!-- 查询角色列表：支持关键字模糊匹配 role_name / role_key，支持 status 过滤，按 create_time 倒序 -->
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM sys_role
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (role_name LIKE CONCAT('%', #{keyword}, '%') OR role_key LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 查询符合条件的角色总数 -->
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM sys_role
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (role_name LIKE CONCAT('%', #{keyword}, '%') OR role_key LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <!-- 新增角色：自动填充 create_time 和 update_time 为当前时间 -->
+    <insert id="insert" parameterType="com.example.pcim.entity.Role">
+        INSERT INTO sys_role (role_name, role_key, description, user_count, status, create_time, update_time)
+        VALUES (#{roleName}, #{roleKey}, #{description}, #{userCount}, #{status}, NOW(), NOW())
+    </insert>
+
+    <!-- 修改角色：动态更新非空字段，自动更新 update_time -->
+    <update id="update" parameterType="com.example.pcim.entity.Role">
+        UPDATE sys_role SET
+        <if test="roleName != null">role_name = #{roleName},</if>
+        <if test="roleKey != null">role_key = #{roleKey},</if>
+        <if test="description != null">description = #{description},</if>
+        <if test="userCount != null">user_count = #{userCount},</if>
+        <if test="status != null">status = #{status},</if>
+        update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除角色 -->
+    <delete id="deleteById">
+        DELETE FROM sys_role WHERE id = #{id}
+    </delete>
+
+</mapper>

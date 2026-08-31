@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  考核评估 Mapper XML
+  对应表：prison_assessment
+-->
+<mapper namespace="com.example.pcim.mapper.AssessmentMapper">
+
+    <!-- 结果映射：数据库字段名（下划线） 与 Java 属性名（驼峰）之间的映射 -->
+    <resultMap id="BaseResultMap" type="com.example.pcim.entity.Assessment">
+        <id column="id" property="id" />
+        <result column="prisoner_no" property="prisonerNo" />
+        <result column="name" property="name" />
+        <result column="cell" property="cell" />
+        <result column="assess_date" property="assessDate" />
+        <result column="type" property="type" />
+        <result column="item" property="item" />
+        <result column="score" property="score" />
+        <result column="level" property="level" />
+        <result column="handler" property="handler" />
+        <result column="remark" property="remark" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 根据主键查询单条记录 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM prison_assessment WHERE id = #{id}
+    </select>
+
+    <!-- 查询考核评估列表，支持 keyword/type/date 动态筛选，按创建时间倒序 -->
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM prison_assessment
+        <where>
+            <!-- 关键字：模糊匹配监犯编号、姓名、考核项目 -->
+            <if test="keyword != null and keyword != ''">
+                AND (prisoner_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR name LIKE CONCAT('%', #{keyword}, '%')
+                     OR item LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <!-- 考核类型筛选 -->
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+            <!-- 考核日期筛选（匹配日期前缀，如 '2025-08' 可筛选出该月所有记录） -->
+            <if test="date != null and date != ''">
+                AND DATE_FORMAT(assess_date, '%Y-%m-%d') LIKE CONCAT(#{date}, '%')
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 查询总记录数，条件与 selectList 保持一致 -->
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM prison_assessment
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (prisoner_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR name LIKE CONCAT('%', #{keyword}, '%')
+                     OR item LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+            <if test="date != null and date != ''">
+                AND DATE_FORMAT(assess_date, '%Y-%m-%d') LIKE CONCAT(#{date}, '%')
+            </if>
+        </where>
+    </select>
+
+    <!-- 新增考核评估记录 -->
+    <insert id="insert" parameterType="com.example.pcim.entity.Assessment">
+        INSERT INTO prison_assessment
+        (prisoner_no, name, cell, assess_date, type, item, score, level, handler, remark, create_time, update_time)
+        VALUES
+        (#{prisonerNo}, #{name}, #{cell}, #{assessDate}, #{type}, #{item}, #{score}, #{level}, #{handler}, #{remark}, NOW(), NOW())
+    </insert>
+
+    <!-- 更新考核评估记录，所有字段按需动态更新 -->
+    <update id="update" parameterType="com.example.pcim.entity.Assessment">
+        UPDATE prison_assessment SET
+        <if test="prisonerNo != null">prisoner_no = #{prisonerNo},</if>
+        <if test="name != null">name = #{name},</if>
+        <if test="cell != null">cell = #{cell},</if>
+        <if test="assessDate != null">assess_date = #{assessDate},</if>
+        <if test="type != null">type = #{type},</if>
+        <if test="item != null">item = #{item},</if>
+        <if test="score != null">score = #{score},</if>
+        <if test="level != null">level = #{level},</if>
+        <if test="handler != null">handler = #{handler},</if>
+        <if test="remark != null">remark = #{remark},</if>
+        update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据主键删除 -->
+    <delete id="deleteById">
+        DELETE FROM prison_assessment WHERE id = #{id}
+    </delete>
+
+    <!--
+      删除指定月份的月度汇总记录
+      type = '月度汇总' 且 item 包含该年月
+      用于同月重复执行月度汇总时先清理旧数据
+    -->
+    <delete id="deleteSummaryByMonth">
+        DELETE FROM prison_assessment
+        WHERE type = '月度汇总'
+          AND item LIKE CONCAT('%', #{yearMonth}, '%')
+    </delete>
+
+    <!-- 批量插入，用于月度汇总一次性生成多条汇总记录 -->
+    <insert id="batchInsert">
+        INSERT INTO prison_assessment
+        (prisoner_no, name, cell, assess_date, type, item, score, level, handler, remark, create_time, update_time)
+        VALUES
+        <foreach collection="list" item="a" separator=",">
+            (#{a.prisonerNo}, #{a.name}, #{a.cell}, #{a.assessDate}, #{a.type}, #{a.item}, #{a.score}, #{a.level}, #{a.handler}, #{a.remark}, NOW(), NOW())
+        </foreach>
+    </insert>
+
+</mapper>

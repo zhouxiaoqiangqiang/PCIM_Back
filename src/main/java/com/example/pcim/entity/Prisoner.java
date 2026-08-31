@@ -16,6 +16,8 @@ public class Prisoner {
     private String cell;
     private String crimeType;
     private String sentence;
+    /** 风险等级（高风险/中风险/低风险/未评定） */
+    private String riskLevel;
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date entryDate;
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")

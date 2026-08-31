@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 预警信息 Mapper XML，对应表: prison_warning -->
+<mapper namespace="com.example.pcim.mapper.WarningMapper">
+
+    <!--
+        基础结果映射
+        将数据库字段映射到 Warning 实体属性
+    -->
+    <resultMap id="BaseResultMap" type="com.example.pcim.entity.Warning">
+        <id column="id" property="id" />
+        <result column="warning_no" property="warningNo" />
+        <result column="prisoner_no" property="prisonerNo" />
+        <result column="name" property="name" />
+        <result column="cell" property="cell" />
+        <result column="type" property="type" />
+        <result column="level" property="level" />
+        <result column="warning_time" property="warningTime" />
+        <result column="content" property="content" />
+        <result column="status" property="status" />
+        <result column="source" property="source" />
+        <result column="handler" property="handler" />
+        <result column="handle_time" property="handleTime" />
+        <result column="handle_result" property="handleResult" />
+        <result column="is_read" property="isRead" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 根据ID查询单条预警 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM prison_warning WHERE id = #{id}
+    </select>
+
+    <!--
+        分页查询预警列表
+        keyword: 模糊匹配 warning_no / prisoner_no / name
+        按预警时间倒序排列（最新的预警在最前面）
+    -->
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM prison_warning
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (warning_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR prisoner_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+            <if test="level != null and level != ''">
+                AND level = #{level}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY warning_time DESC
+    </select>
+
+    <!-- 根据查询条件统计记录总数 -->
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM prison_warning
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (warning_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR prisoner_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+            <if test="level != null and level != ''">
+                AND level = #{level}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <!--
+        新增预警记录
+        warning_no 在 Service 层自动生成，此处由传入参数填充
+        create_time / update_time 使用数据库当前时间
+    -->
+    <insert id="insert" parameterType="com.example.pcim.entity.Warning" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO prison_warning
+        (warning_no, prisoner_no, name, cell, type, level, warning_time, content,
+         status, source, handler, handle_time, handle_result, is_read,
+         create_time, update_time)
+        VALUES
+        (#{warningNo}, #{prisonerNo}, #{name}, #{cell}, #{type}, #{level},
+         #{warningTime}, #{content}, #{status}, #{source}, #{handler},
+         #{handleTime}, #{handleResult}, #{isRead}, NOW(), NOW())
+    </insert>
+
+    <!--
+        更新预警记录
+        仅更新非空字段，update_time 自动刷新
+    -->
+    <update id="update" parameterType="com.example.pcim.entity.Warning">
+        UPDATE prison_warning
+        <set>
+            <if test="warningNo != null">warning_no = #{warningNo},</if>
+            <if test="prisonerNo != null">prisoner_no = #{prisonerNo},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="cell != null">cell = #{cell},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="level != null">level = #{level},</if>
+            <if test="warningTime != null">warning_time = #{warningTime},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="source != null">source = #{source},</if>
+            <if test="handler != null">handler = #{handler},</if>
+            <if test="handleTime != null">handle_time = #{handleTime},</if>
+            <if test="handleResult != null">handle_result = #{handleResult},</if>
+            <if test="isRead != null">is_read = #{isRead},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除预警记录 -->
+    <delete id="deleteById">
+        DELETE FROM prison_warning WHERE id = #{id}
+    </delete>
+
+    <!-- 查询未读预警数量（is_read = 0） -->
+    <select id="selectUnreadCount" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM prison_warning WHERE is_read = 0
+    </select>
+
+    <!-- 查询未读预警列表，按预警时间倒序，最多返回50条 -->
+    <select id="selectUnreadList" resultMap="BaseResultMap">
+        SELECT * FROM prison_warning WHERE is_read = 0
+        ORDER BY warning_time DESC LIMIT 50
+    </select>
+
+    <!-- 将单条预警标记为已读 -->
+    <update id="markReadById">
+        UPDATE prison_warning SET is_read = 1, update_time = NOW() WHERE id = #{id}
+    </update>
+
+    <!-- 将所有未读预警标记为已读 -->
+    <update id="markAllRead">
+        UPDATE prison_warning SET is_read = 1, update_time = NOW() WHERE is_read = 0
+    </update>
+
+</mapper>

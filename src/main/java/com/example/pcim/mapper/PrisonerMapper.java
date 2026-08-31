@@ -21,4 +21,13 @@ public interface PrisonerMapper {
     int update(Prisoner prisoner);
 
     int deleteById(@Param("id") Long id);
+
+    /**
+     * 更新监犯风险等级
+     * @param id 监犯ID
+     * @param riskLevel 风险等级
+     * @return 受影响行数
+     */
+    int updateRiskLevel(@Param("id") Long id, @Param("riskLevel") String riskLevel);
+
 }

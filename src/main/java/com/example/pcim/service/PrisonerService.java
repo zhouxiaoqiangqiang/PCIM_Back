@@ -15,4 +15,13 @@ public interface PrisonerService {
     int updatePrisoner(PrisonerDTO prisonerDTO);
 
     int deletePrisoner(Long id);
+
+    /**
+     * 修改监犯风险等级
+     * @param id 监犯ID
+     * @param riskLevel 风险等级
+     * @param reason 变更原因
+     */
+    void updateRiskLevel(Long id, String riskLevel, String reason);
+
 }

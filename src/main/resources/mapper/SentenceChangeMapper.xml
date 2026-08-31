@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.pcim.mapper.SentenceChangeMapper">
+
+    <!-- 刑期变动记录结果映射 -->
+    <resultMap id="BaseResultMap" type="com.example.pcim.entity.SentenceChange">
+        <id column="id" property="id" />
+        <result column="prisoner_no" property="prisonerNo" />
+        <result column="name" property="name" />
+        <result column="change_type" property="changeType" />
+        <result column="old_value" property="oldValue" />
+        <result column="new_value" property="newValue" />
+        <result column="change_date" property="changeDate" />
+        <result column="operator" property="operator" />
+        <result column="reason" property="reason" />
+        <result column="remark" property="remark" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM prison_sentence_change WHERE id = #{id}
+    </select>
+
+    <!-- 条件查询列表 -->
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT * FROM prison_sentence_change
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR prisoner_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="prisonerNo != null and prisonerNo != ''">
+                AND prisoner_no = #{prisonerNo}
+            </if>
+        </where>
+        ORDER BY change_date DESC, create_time DESC
+    </select>
+
+    <!-- 条件查询总数 -->
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM prison_sentence_change
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') OR prisoner_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="prisonerNo != null and prisonerNo != ''">
+                AND prisoner_no = #{prisonerNo}
+            </if>
+        </where>
+    </select>
+
+    <!-- 新增刑期变动记录（该模块不允许修改和删除） -->
+    <insert id="insert" parameterType="com.example.pcim.entity.SentenceChange">
+        INSERT INTO prison_sentence_change (prisoner_no, name, change_type, old_value, new_value, change_date, operator, reason, remark, create_time)
+        VALUES (#{prisonerNo}, #{name}, #{changeType}, #{oldValue}, #{newValue}, #{changeDate}, #{operator}, #{reason}, #{remark}, NOW())
+    </insert>
+
+</mapper>

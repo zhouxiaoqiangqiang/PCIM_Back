@@ -3,9 +3,18 @@ package com.example.pcim.controller;
 import com.example.pcim.dto.AssessmentDTO;
 import com.example.pcim.dto.AssessmentQueryDTO;
 import com.example.pcim.dto.Response;
+import com.example.pcim.entity.Assessment;
 import com.example.pcim.service.AssessmentService;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.OutputStream;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.List;
 
 /**
  * 考核评估 Controller
@@ -103,5 +112,69 @@ public class AssessmentController {
     public Response<?> runMonthlySummary() {
         String result = assessmentService.runMonthlySummary();
         return Response.success(result);
+    }
+
+
+    /**
+     * 导出考核记录为 Excel（xlsx）
+     * 前端 responseType: 'blob'，直接返回文件流
+     */
+    @PostMapping("/export")
+    public void exportAssessments(@RequestBody AssessmentQueryDTO queryDTO, HttpServletResponse response) throws Exception {
+        // 查询符合条件的全部记录（不分页）
+        List<Assessment> list = assessmentService.getAssessmentListForExport(queryDTO);
+
+        // 设置响应头
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        String fileName = URLEncoder.encode("考核记录.xlsx", "UTF-8").replaceAll("\\+", "%20");
+        response.setHeader("Content-Disposition", "attachment; filename=" + fileName);
+
+        // 使用 Apache POI 生成 xlsx
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("考核记录");
+
+        // 表头样式
+        CellStyle headerStyle = workbook.createCellStyle();
+        Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerStyle.setFont(headerFont);
+        headerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+        // 写表头
+        String[] headers = {"监犯编号", "姓名", "监区", "考核日期", "考核类型", "考核事项", "分值", "等级", "经办人", "备注"};
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        // 写数据行
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        for (int i = 0; i < list.size(); i++) {
+            Assessment a = list.get(i);
+            Row row = sheet.createRow(i + 1);
+            row.createCell(0).setCellValue(a.getPrisonerNo() != null ? a.getPrisonerNo() : "");
+            row.createCell(1).setCellValue(a.getName() != null ? a.getName() : "");
+            row.createCell(2).setCellValue(a.getCell() != null ? a.getCell() : "");
+            row.createCell(3).setCellValue(a.getAssessDate() != null ? sdf.format(a.getAssessDate()) : "");
+            row.createCell(4).setCellValue(a.getType() != null ? a.getType() : "");
+            row.createCell(5).setCellValue(a.getItem() != null ? a.getItem() : "");
+            row.createCell(6).setCellValue(a.getScore() != null ? a.getScore() : 0);
+            row.createCell(7).setCellValue(a.getLevel() != null ? a.getLevel() : "");
+            row.createCell(8).setCellValue(a.getHandler() != null ? a.getHandler() : "");
+            row.createCell(9).setCellValue(a.getRemark() != null ? a.getRemark() : "");
+        }
+
+        // 自动列宽
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        // 输出到响应流
+        OutputStream out = response.getOutputStream();
+        workbook.write(out);
+        workbook.close();
+        out.close();
     }
 }

@@ -5,6 +5,8 @@ import com.example.pcim.dto.AssessmentQueryDTO;
 import com.example.pcim.dto.PageResult;
 import com.example.pcim.entity.Assessment;
 
+import java.util.List;
+
 /**
  * 考核评估 Service 接口
  * 定义考核评估模块的业务逻辑方法
@@ -18,6 +20,14 @@ public interface AssessmentService {
      * @return 分页结果（列表 + 总条数）
      */
     PageResult<Assessment> getAssessmentList(AssessmentQueryDTO queryDTO);
+
+    /**
+     * 查询全部考核记录（不分页，用于导出 Excel）
+     *
+     * @param queryDTO 查询条件
+     * @return 全量考核记录列表
+     */
+    List<Assessment> getAssessmentListForExport(AssessmentQueryDTO queryDTO);
 
     /**
      * 根据ID查询单条考核评估记录

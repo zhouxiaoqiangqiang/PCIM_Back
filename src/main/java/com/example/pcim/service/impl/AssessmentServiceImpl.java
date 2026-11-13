@@ -50,6 +50,16 @@ public class AssessmentServiceImpl implements AssessmentService {
         return new PageResult<>(pageList, total);
     }
 
+    /**
+     * 查询全部考核记录（不分页，用于导出 Excel）
+     * 直接调用 Mapper 的 selectList 返回全量数据
+     */
+    @Override
+    public List<Assessment> getAssessmentListForExport(AssessmentQueryDTO queryDTO) {
+        return assessmentMapper.selectList(
+                queryDTO.getKeyword(), queryDTO.getType(), queryDTO.getDate());
+    }
+
     @Override
     public Assessment getAssessmentById(Long id) {
         return assessmentMapper.selectById(id);

@@ -8,6 +8,14 @@ spring:
     password: 12345678
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  # 统一 JSON 序列化配置：所有 java.util.Date 字段输出为 yyyy-MM-dd HH:mm:ss
+  # 避免返回 ISO-8601 带时区格式（如 2026-11-13T01:33:21.000+00:00）
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    serialization:
+      write-dates-as-timestamps: false
+
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.example.pcim.entity

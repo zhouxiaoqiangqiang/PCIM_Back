@@ -15,7 +15,7 @@ public class Response<T> {
     }
 
     public static <T> Response<T> success(T data) {
-        return new Response<>(200, "success", data);
+        return new Response<>(200, "操作成功！", data);
     }
 
     public static <T> Response<T> success(String message, T data) {
@@ -23,7 +23,7 @@ public class Response<T> {
     }
 
     public static <T> Response<T> success() {
-        return new Response<>(200, "success", null);
+        return new Response<>(200, "操作成功！", null);
     }
 
     public static <T> Response<T> error(Integer code, String message) {

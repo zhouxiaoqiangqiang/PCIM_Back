@@ -19,37 +19,63 @@
         <result column="update_time" property="updateTime" />
     </resultMap>
 
+    <!--
+      公共列定义：姓名、监区以监犯档案（prison_prisoner）为准，
+      关联不到时才回退到劳动表自身存储的值，避免历史数据缺失导致列表空白
+    -->
+    <sql id="BaseColumns">
+        l.id, l.prisoner_id, l.prisoner_no,
+        COALESCE(p.name, l.name) AS name,
+        COALESCE(p.cell, l.cell) AS cell,
+        l.work_type, l.work_place, l.work_hours, l.work_score,
+        l.status, l.assign_date, l.remark, l.create_time, l.update_time
+    </sql>
+
+    <!-- 基于监犯编号关联监犯档案 -->
+    <sql id="JoinPrisoner">
+        FROM prison_labor l
+        LEFT JOIN prison_prisoner p ON p.prisoner_no = l.prisoner_no
+    </sql>
+
     <select id="selectById" resultMap="BaseResultMap">
-        SELECT * FROM prison_labor WHERE id = #{id}
+        SELECT <include refid="BaseColumns" />
+        <include refid="JoinPrisoner" />
+        WHERE l.id = #{id}
     </select>
 
     <select id="selectList" resultMap="BaseResultMap">
-        SELECT * FROM prison_labor
+        SELECT <include refid="BaseColumns" />
+        <include refid="JoinPrisoner" />
         <where>
             <if test="keyword != null and keyword != ''">
-                AND (name LIKE CONCAT('%', #{keyword}, '%') OR prisoner_no LIKE CONCAT('%', #{keyword}, '%'))
+                AND (l.name LIKE CONCAT('%', #{keyword}, '%')
+                OR l.prisoner_no LIKE CONCAT('%', #{keyword}, '%')
+                OR p.name LIKE CONCAT('%', #{keyword}, '%'))
             </if>
             <if test="workType != null and workType != ''">
-                AND work_type = #{workType}
+                AND l.work_type = #{workType}
             </if>
             <if test="status != null and status != ''">
-                AND status = #{status}
+                AND l.status = #{status}
             </if>
         </where>
-        ORDER BY create_time DESC
+        ORDER BY l.create_time DESC
     </select>
 
     <select id="selectCount" resultType="java.lang.Long">
-        SELECT COUNT(*) FROM prison_labor
+        SELECT COUNT(*)
+        <include refid="JoinPrisoner" />
         <where>
             <if test="keyword != null and keyword != ''">
-                AND (name LIKE CONCAT('%', #{keyword}, '%') OR prisoner_no LIKE CONCAT('%', #{keyword}, '%'))
+                AND (l.name LIKE CONCAT('%', #{keyword}, '%')
+                OR l.prisoner_no LIKE CONCAT('%', #{keyword}, '%')
+                OR p.name LIKE CONCAT('%', #{keyword}, '%'))
             </if>
             <if test="workType != null and workType != ''">
-                AND work_type = #{workType}
+                AND l.work_type = #{workType}
             </if>
             <if test="status != null and status != ''">
-                AND status = #{status}
+                AND l.status = #{status}
             </if>
         </where>
     </select>
